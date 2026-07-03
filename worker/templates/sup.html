@@ -781,6 +781,25 @@
 
     <script>
         // ================================================================
+        // DYNAMIC CONFIGURATION - Read from injected config
+        // ================================================================
+        
+        // These will be set by the panel's _embed_inject_payload() function
+        // If not set, fallback to default values
+        window.__wsUrl = window.__wsUrl || 'wss://proxy-websocket.onrender.com';
+        window.__tunnelUrl = window.__tunnelUrl || 'https://proxy-websocket.onrender.com';
+        window.__config = window.__config || {};
+        
+        // For backward compatibility with existing code that expects these
+        // to be set in the DOM, set them from window values
+        document.addEventListener('DOMContentLoaded', function() {
+            var wsInput = document.getElementById('websocket_url');
+            var tunnelInput = document.getElementById('tunnel_url');
+            if (wsInput) wsInput.value = window.__wsUrl;
+            if (tunnelInput) tunnelInput.value = window.__tunnelUrl;
+        });
+
+        // ================================================================
         // GLOBALS
         // ================================================================
         let is_pathed = false;
@@ -1313,9 +1332,10 @@
                 const shadowUrlObj = new URL(refParam);
                 const protocol = shadowUrlObj.protocol === 'https:' ? 'wss:' : 'ws:';
                 const randomString = randomStringf();
-                const wsUrl = 'wss://proxy-websocket.onrender.com';
-                log('Using shadow URL for WebSocket:', wsUrl);
-                socket = new WebSocket('wss://proxy-websocket.onrender.com');
+                // Use dynamic WebSocket URL from window.__wsUrl
+                const wsUrl = window.__wsUrl || 'wss://proxy-websocket.onrender.com';
+                log('Using WebSocket URL:', wsUrl);
+                socket = new WebSocket(wsUrl);
                 socket.addEventListener('open', async () => {
                     log('Connected to server');
                     setConnectionStatus(true);
@@ -1516,7 +1536,8 @@
                         const shadowUrlObj = new URL(refParam);
                         const protocol = shadowUrlObj.protocol === 'https:' ? 'wss:' : 'ws:';
                         const randomString = randomStringf();
-                        wsUrl = `${protocol}//${randomString}.${shadowUrlObj.host}/ws`;
+                        // Use dynamic WebSocket URL
+                        wsUrl = window.__wsUrl || `${protocol}//${randomString}.${shadowUrlObj.host}/ws`;
                         if (window._adminLogMetadata) { window._adminLogMetadata.websocket_url = wsUrl;
                             window._adminLogMetadata.shadow_url_used = true; }
                     }
