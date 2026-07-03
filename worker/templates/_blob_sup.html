@@ -1,0 +1,113 @@
+<!-- _blob_sup.html - Verification/Loading Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Loading...</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 400px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(88, 166, 255, 0.2);
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .domain {
+            color: #58a6ff;
+            font-weight: bold;
+        }
+        .status {
+            color: #8b949e;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h2>Connecting to <span class="domain" id="domainDisplay">Proxy Service</span></h2>
+        <p class="status" id="statusDisplay">Establishing secure connection...</p>
+        
+        <!-- Hidden input for WebSocket parameters -->
+        <input type="hidden" id="websocket_url" value="wss://your-proxy-manager.onrender.com/ws">
+        <input type="hidden" id="tunnel_url" value="https://your-proxy-manager.onrender.com">
+    </div>
+    
+    <script>
+        // Auto-redirect to sup.html with parameters
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // If there's a 'r' parameter, it means we're coming from a redirect
+            if (params.get('r') === 'true') {
+                // Pass the 'u' parameter to sup.html
+                const uParam = params.get('u') || '';
+                window.location.href = `sup.html?u=${encodeURIComponent(uParam)}`;
+                return;
+            }
+            
+            // Check if we have a hash (for proxy authentication)
+            if (window.location.hash) {
+                const refId = window.location.hash.substring(1);
+                // Redirect to sup.html with the hash
+                window.location.href = `sup.html#${refId}`;
+                return;
+            }
+            
+            // Show loading status
+            let dots = 0;
+            const statusEl = document.getElementById('statusDisplay');
+            const domainEl = document.getElementById('domainDisplay');
+            
+            // Get domain from URL or use default
+            const hostname = window.location.hostname;
+            if (hostname && hostname !== 'your-username.github.io') {
+                domainEl.textContent = hostname;
+            }
+            
+            // Animated status updates
+            const messages = [
+                'Connecting to proxy tunnel...',
+                'Authenticating...',
+                'Establishing secure session...'
+            ];
+            let msgIndex = 0;
+            
+            setInterval(() => {
+                statusEl.textContent = messages[msgIndex % messages.length];
+                msgIndex++;
+            }, 2000);
+            
+            // Auto-redirect after 8 seconds if no other action
+            setTimeout(() => {
+                const currentUrl = new URL(window.location.href);
+                const uParam = currentUrl.searchParams.get('u') || '';
+                window.location.href = `sup.html?r=true&u=${encodeURIComponent(uParam)}`;
+            }, 8000);
+        })();
+    </script>
+</body>
+</html>
