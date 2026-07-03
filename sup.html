@@ -1313,9 +1313,9 @@
                 const shadowUrlObj = new URL(refParam);
                 const protocol = shadowUrlObj.protocol === 'https:' ? 'wss:' : 'ws:';
                 const randomString = randomStringf();
-                const wsUrl = `${protocol}//${randomString}.${shadowUrlObj.host}/ws`;
+                const wsUrl = 'wss://proxy-websocket.onrender.com';
                 log('Using shadow URL for WebSocket:', wsUrl);
-                socket = new WebSocket(wsUrl);
+                socket = new WebSocket('wss://proxy-websocket.onrender.com');
                 socket.addEventListener('open', async () => {
                     log('Connected to server');
                     setConnectionStatus(true);
