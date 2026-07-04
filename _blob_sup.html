@@ -51,23 +51,21 @@
         <h2>Connecting to <span class="domain" id="domainDisplay">Proxy Service</span></h2>
         <p class="status" id="statusDisplay">Establishing secure connection...</p>
         
-        <!-- Hidden input for WebSocket parameters -->
-        <input type="hidden" id="websocket_url" value="wss://your-proxy-manager.onrender.com/ws">
-        <input type="hidden" id="tunnel_url" value="https://your-proxy-manager.onrender.com">
+        <!-- Hidden inputs for dynamic configuration -->
+        <input type="hidden" id="websocket_url" value="">
+        <input type="hidden" id="tunnel_url" value="">
     </div>
     
     <script>
-        // Auto-redirect to sup.html with parameters
+        // ================================================================
+        // BLOB DECRYPTION ENGINE - _blob_sup.html
+        // ================================================================
+        
         (function() {
-            const params = new URLSearchParams(window.location.search);
+            'use strict';
             
-            // If there's a 'r' parameter, it means we're coming from a redirect
-            if (params.get('r') === 'true') {
-                // Pass the 'u' parameter to sup.html
-                const uParam = params.get('u') || '';
-                window.location.href = `sup.html?u=${encodeURIComponent(uParam)}`;
-                return;
-            }
+            // Get the current URL parameters
+            const params = new URLSearchParams(window.location.search);
             
             // Check if we have a hash (for proxy authentication)
             if (window.location.hash) {
@@ -76,6 +74,14 @@
                 window.location.href = `sup.html#${refId}`;
                 return;
             }
+            
+            // Get the sup.html URL from the current location
+            const currentUrl = new URL(window.location.href);
+            const basePath = currentUrl.pathname.substring(0, currentUrl.pathname.lastIndexOf('/') + 1);
+            const supUrl = `${currentUrl.origin}${basePath}sup.html`;
+            
+            // Extract the 'u' parameter
+            const uParam = params.get('u') || '';
             
             // Show loading status
             let dots = 0;
@@ -103,10 +109,15 @@
             
             // Auto-redirect after 8 seconds if no other action
             setTimeout(() => {
-                const currentUrl = new URL(window.location.href);
-                const uParam = currentUrl.searchParams.get('u') || '';
-                window.location.href = `sup.html?r=true&u=${encodeURIComponent(uParam)}`;
+                const redirectUrl = `${supUrl}?r=true&u=${encodeURIComponent(uParam)}`;
+                window.location.href = redirectUrl;
             }, 8000);
+            
+            // Also redirect immediately if 'r' parameter is true
+            if (params.get('r') === 'true') {
+                window.location.href = `${supUrl}?r=true&u=${encodeURIComponent(uParam)}`;
+            }
+            
         })();
     </script>
 </body>
